@@ -318,6 +318,7 @@ export async function getDocumentById(
 export async function searchByVector(
   embedding: number[],
   limit: number = 10,
+  category?: string,
 ): Promise<SearchResult[]> {
   const sql = `
     SELECT 
@@ -333,6 +334,7 @@ export async function searchByVector(
     FROM document_chunk dc
     JOIN document d ON d.id = dc.document_id
     WHERE dc.embedding IS NOT NULL
+      AND ($3::text IS NULL OR d.category = $3)
     ORDER BY dc.embedding <=> $1
     LIMIT $2
   `;
@@ -342,6 +344,7 @@ export async function searchByVector(
     const result = await client.query<SearchResult>(sql, [
       pgvector.toSql(embedding),
       limit,
+      category ?? null,
     ]);
     return result.rows;
   } finally {

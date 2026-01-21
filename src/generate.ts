@@ -4,7 +4,7 @@
  * Uses Claude 4.5 Sonnet with retrieved context to generate responses
  * to user queries using a RAG (Retrieval-Augmented Generation) approach.
  *
- * Usage: npm run generate -- "<query>"
+ * Usage: npm run generate -- "<query>" [--category <value>]
  */
 
 import {
@@ -14,7 +14,7 @@ import {
 import { retrieve, RetrieveResult } from "./retrieve";
 import { closePool, SearchResult } from "./utils/database";
 import { createBedrockClient } from "./utils/embed";
-import { getQueryFromArgs } from "./utils/cli";
+import { parseArgs } from "./utils/cli";
 
 /**
  * Configuration for the generation operation
@@ -205,6 +205,7 @@ async function generateResponse(
  */
 export async function generate(
   query: string,
+  category?: string,
 ): Promise<GenerateResult> {
   const startTime = Date.now();
 
@@ -216,7 +217,7 @@ export async function generate(
   let retrieveResult: RetrieveResult;
 
   try {
-    retrieveResult = await retrieve(query);
+    retrieveResult = await retrieve(query, category);
   } catch (error) {
     // If retrieval fails, we can still try to generate with no context
     console.warn(
@@ -299,23 +300,26 @@ function formatGenerateResult(result: GenerateResult): string {
 async function main(): Promise<void> {
   try {
     // Get query from command line
-    const query = getQueryFromArgs(process.argv);
+    const { query, category } = parseArgs(process.argv);
 
     if (!query) {
-      console.error('Usage: npm run generate -- "<query>"');
+      console.error('Usage: npm run generate -- "<query>" [--category <value>]');
       console.error(
-        'Example: npm run generate -- "How do I configure the database?"',
+        'Example: npm run generate -- "How do I create a packing slip?" --category shipping',
       );
       process.exit(1);
     }
 
     console.log("Starting RAG generation...");
     console.log(`Query: "${query}"`);
+    if (category) {
+      console.log(`Category: ${category}`);
+    }
     console.log("");
     console.log("Retrieving relevant context...");
 
     // Perform generation
-    const result = await generate(query);
+    const result = await generate(query, category);
 
     // Display results
     console.log("");

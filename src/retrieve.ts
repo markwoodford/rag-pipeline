@@ -4,7 +4,7 @@
  * Performs vector search (cosine similarity) to retrieve
  * relevant document chunks for a given query.
  *
- * Usage: npm run retrieve -- "<query>"
+ * Usage: npm run retrieve -- "<query>" [--category <value>]
  */
 
 import { searchByVector, closePool, SearchResult } from "./utils/database";
@@ -13,7 +13,7 @@ import {
   createBedrockClient,
   generateEmbedding,
 } from "./utils/embed";
-import { getQueryFromArgs } from "./utils/cli";
+import { parseArgs } from "./utils/cli";
 
 /**
  * Configuration for the retrieval operation
@@ -21,6 +21,8 @@ import { getQueryFromArgs } from "./utils/cli";
 export interface RetrieveConfig {
   /** Number of results to return */
   topK: number;
+  /** Optional category filter for results */
+  category?: string;
 }
 
 /**
@@ -82,6 +84,7 @@ function formatResults(results: SearchResult[]): string {
  */
 export async function retrieve(
   query: string,
+  category?: string,
 ): Promise<RetrieveResult> {
   const startTime = Date.now();
 
@@ -94,7 +97,11 @@ export async function retrieve(
   const embedding = await generateEmbedding(client, query, embedConfig.modelId);
 
   // Perform the retrieval
-  const results = await searchByVector(embedding, retrieveConfig.topK);
+  const results = await searchByVector(
+    embedding,
+    retrieveConfig.topK,
+    category,
+  );
 
   const timeTaken = Date.now() - startTime;
 
@@ -108,12 +115,12 @@ export async function retrieve(
 async function main(): Promise<void> {
   try {
     // Get query from command line
-    const query = getQueryFromArgs(process.argv);
+    const { query, category } = parseArgs(process.argv);
 
     if (!query) {
-      console.error('Usage: npm run retrieve -- "<query>"');
+      console.error('Usage: npm run retrieve -- "<query>" [--category <value>]');
       console.error(
-        'Example: npm run retrieve -- "How do I configure the database?"',
+        'Example: npm run retrieve -- "How do I create a packing slip?" --category shipping',
       );
       process.exit(1);
     }
@@ -124,10 +131,13 @@ async function main(): Promise<void> {
     // Get configuration
     const config = getRetrieveConfig();
     console.log(`Top K: ${config.topK}`);
+    if (category) {
+      console.log(`Category: ${category}`);
+    }
     console.log("");
 
     // Perform retrieval
-    const result = await retrieve(query);
+    const result = await retrieve(query, category);
 
     // Display results
     console.log(formatResults(result.results));
