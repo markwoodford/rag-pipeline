@@ -1,0 +1,39 @@
+{
+  "name": "rag-pipeline",
+  "version": "1.0.0",
+  "description": "Proof-of-Concept Retrieval-Augmented Generation pipeline",
+  "scripts": {
+    "build": "tsc",
+    "ingest": "dotenv -- tsx src/ingest.ts",
+    "retrieve": "dotenv -- tsx src/retrieve.ts",
+    "generate": "dotenv -- tsx src/generate.ts",
+    "eval": "dotenv -- tsx src/eval.ts",
+    "lint": "eslint 'src/**/*.ts' --max-warnings 0",
+    "lint:fix": "eslint 'src/**/*.ts' --fix"
+  },
+  "keywords": [
+    "rag",
+    "retrieval-augmented-generation",
+    "vector-database",
+    "embeddings"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.499.0",
+    "@langchain/textsplitters": "^1.0.1",
+    "ai": "^3.0.0",
+    "pg": "^8.11.3",
+    "pgvector": "^0.1.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "dotenv-cli": "^11.0.0",
+    "eslint": "^8.56.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
