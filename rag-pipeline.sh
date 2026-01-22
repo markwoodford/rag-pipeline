@@ -26,14 +26,19 @@ Commands:
   ingest    Ingest docs into the database
   retrieve  Retrieve context for a query
   generate  Generate a response for a query
+  eval      Evaluate retrieval using an LLM judge
   logs      Tail database logs
   help      Show this help
 
 Examples:
   ./rag-pipeline.sh up
   ./rag-pipeline.sh ingest
-  ./rag-pipeline.sh retrieve "How do I configure the database?"
-  ./rag-pipeline.sh generate "What are work order statuses?"
+  ./rag-pipeline.sh retrieve "How do I create a packing slip?"
+  ./rag-pipeline.sh retrieve "How do I create a packing slip?" --category shipping
+  ./rag-pipeline.sh generate "How do I create a packing slip?"
+  ./rag-pipeline.sh generate "How do I create a packing slip?" --category shipping
+  ./rag-pipeline.sh eval "How do I create a packing slip?"
+  ./rag-pipeline.sh eval "How do I create a packing slip?" --category shipping
 EOF
 }
 
@@ -66,6 +71,13 @@ case "$command" in
       exit 1
     fi
     "${COMPOSE[@]}" run --rm app npm run generate -- "$@"
+    ;;
+  eval)
+    if [ "$#" -eq 0 ]; then
+      echo "Query required for eval." >&2
+      exit 1
+    fi
+    "${COMPOSE[@]}" run --rm app npm run eval -- "$@"
     ;;
   logs)
     "${COMPOSE[@]}" logs -f --tail=100 db
